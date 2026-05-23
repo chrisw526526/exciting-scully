@@ -1,0 +1,8 @@
+{
+  "name": "exciting-scully-fantasy-manager",
+  "version": "1.0.0",
+  "description": "AI Fantasy Baseball Manager for Exciting Scully",
+  "engines": {
+    "node": "18.x"
+  }
+}

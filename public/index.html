@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Exciting Scully — AI Fantasy Manager</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0a0f1e;
+    --bg2: #0f172a;
+    --bg3: #1e293b;
+    --border: #1e293b;
+    --border2: #334155;
+    --text: #e2e8f0;
+    --text2: #94a3b8;
+    --text3: #64748b;
+    --gold: #f4c430;
+    --green: #22c55e;
+    --red: #ef4444;
+    --amber: #f59e0b;
+    --blue: #3b82f6;
+    --radius: 10px;
+  }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; min-height: 100vh; }
+  .app { max-width: 480px; margin: 0 auto; padding: 0 0 80px; }
+  .header { background: var(--bg2); border-bottom: 1px solid var(--gold); padding: 14px 16px; position: sticky; top: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; }
+  .header-left { display: flex; align-items: center; gap: 10px; }
+  .logo { font-size: 22px; }
+  .team-name { font-size: 16px; font-weight: 700; color: var(--gold); letter-spacing: 0.5px; }
+  .team-sub { font-size: 10px; color: var(--text3); letter-spacing: 1px; }
+  .sync-btn { background: var(--bg3); border: 1px solid var(--border2); border-radius: 20px; padding: 6px 12px; font-size: 11px; color: var(--text2); cursor: pointer; }
+  .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 12px 16px; }
+  .metric { background: var(--bg2); border-radius: var(--radius); padding: 10px 8px; text-align: center; border: 1px solid var(--border); }
+  .metric-val { font-size: 22px; font-weight: 700; }
+  .metric-label { font-size: 9px; color: var(--text3); margin-top: 2px; letter-spacing: 0.5px; text-transform: uppercase; }
+  .starts-wrap { margin: 0 16px 12px; background: var(--bg2); border-radius: var(--radius); padding: 10px 12px; border: 1px solid var(--border); }
+  .starts-top { display: flex; justify-content: space-between; font-size: 11px; color: var(--text2); margin-bottom: 6px; }
+  .starts-track { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+  .starts-fill { height: 100%; border-radius: 3px; transition: width 0.5s; }
+  .alert { margin: 0 16px 12px; background: #f59e0b15; border: 1px solid #f59e0b44; border-radius: var(--radius); padding: 10px 12px; font-size: 12px; color: var(--amber); }
+  .tabs { display: flex; border-bottom: 1px solid var(--border); background: var(--bg2); position: sticky; top: 57px; z-index: 99; }
+  .tab { flex: 1; padding: 12px 4px; font-size: 11px; background: none; border: none; border-bottom: 2px solid transparent; cursor: pointer; color: var(--text3); font-weight: 500; transition: all 0.15s; }
+  .tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+  .section { display: none; padding: 16px; }
+  .section.active { display: block; }
+  .card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; margin-bottom: 10px; }
+  .card-label { font-size: 10px; color: var(--text3); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px; }
+  .response { font-size: 13px; line-height: 1.8; color: var(--text); white-space: pre-wrap; }
+  .btn { width: 100%; padding: 12px; font-size: 13px; font-weight: 600; border-radius: var(--radius); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 10px; transition: all 0.15s; }
+  .btn-primary { background: var(--gold); color: #0a0f1e; }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-secondary { background: var(--bg3); color: var(--text2); border: 1px solid var(--border2); }
+  .loading { display: flex; align-items: center; gap: 10px; padding: 12px 0; font-size: 13px; color: var(--text3); }
+  .spinner { width: 16px; height: 16px; border: 2px solid var(--border2); border-top-color: var(--text2); border-radius: 50%; animation: spin 0.8s linear infinite; flex-shrink: 0; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .roster-section-label { font-size: 10px; color: var(--gold); letter-spacing: 1.5px; text-transform: uppercase; margin: 14px 0 6px; border-bottom: 1px solid var(--border); padding-bottom: 4px; }
+  .player-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; background: var(--bg2); border-radius: 8px; border: 1px solid var(--border); margin-bottom: 6px; }
+  .player-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .player-name { font-size: 13px; font-weight: 600; }
+  .player-meta { font-size: 11px; color: var(--text3); }
+  .player-badge { font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 10px; }
+  .badge-il { background: #ef444422; color: var(--red); }
+  .badge-be { background: #3b82f622; color: var(--blue); }
+  .empty-state { font-size: 13px; color: var(--text3); padding: 20px 0; text-align: center; }
+  .trade-label { font-size: 12px; color: var(--text2); margin-bottom: 6px; }
+  .trade-select { width: 100%; padding: 10px 12px; background: var(--bg2); border: 1px solid var(--border2); border-radius: var(--radius); color: var(--text); font-size: 13px; margin-bottom: 12px; }
+  .trade-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+  .chat-messages { min-height: 120px; margin-bottom: 10px; }
+  .msg { margin-bottom: 12px; }
+  .msg-label { font-size: 10px; color: var(--text3); margin-bottom: 4px; }
+  .bubble-ai { background: var(--bg2); border: 1px solid var(--border); border-radius: 0 var(--radius) var(--radius) var(--radius); padding: 10px 14px; font-size: 13px; line-height: 1.7; }
+  .bubble-user { background: #3b82f622; border: 1px solid #3b82f644; border-radius: var(--radius) 0 var(--radius) var(--radius); padding: 10px 14px; font-size: 13px; margin-left: 20%; }
+  .chat-input-row { display: flex; gap: 8px; }
+  .chat-input { flex: 1; background: var(--bg2); border: 1px solid var(--border2); border-radius: var(--radius); color: var(--text); padding: 10px 12px; font-size: 13px; resize: none; min-height: 60px; font-family: inherit; }
+  .chat-input:focus { outline: none; border-color: var(--gold); }
+  .chat-send { background: var(--gold); border: none; border-radius: var(--radius); padding: 0 16px; font-size: 18px; cursor: pointer; color: #0a0f1e; font-weight: 700; }
+  .chat-send:disabled { opacity: 0.4; cursor: not-allowed; }
+  .quick-btns { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+  .quick-btn { font-size: 11px; padding: 6px 10px; border-radius: 16px; border: 1px solid var(--border2); background: var(--bg2); color: var(--text2); cursor: pointer; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <div class="header-left">
+      <div class="logo">⚾</div>
+      <div>
+        <div class="team-name">EXCITING SCULLY</div>
+        <div class="team-sub">AI FANTASY MANAGER</div>
+      </div>
+    </div>
+    <button class="sync-btn" id="syncBtn" onclick="syncESPN()">⟳ Sync ESPN</button>
+  </div>
+
+  <div class="metrics">
+    <div class="metric">
+      <div class="metric-val" id="mStarts" style="color:#64748b">—</div>
+      <div class="metric-label">Starts left</div>
+    </div>
+    <div class="metric">
+      <div class="metric-val" id="mFAAB">—</div>
+      <div class="metric-label">FAAB</div>
+    </div>
+    <div class="metric">
+      <div class="metric-val" id="mIL">—</div>
+      <div class="metric-label">On IL</div>
+    </div>
+    <div class="metric">
+      <div class="metric-val" id="mRecord">—</div>
+      <div class="metric-label">Record</div>
+    </div>
+  </div>
+
+  <div class="starts-wrap">
+    <div class="starts-top">
+      <span id="startsLabel">Sync ESPN to load your roster</span>
+      <span>12 max/week</span>
+    </div>
+    <div class="starts-track">
+      <div class="starts-fill" id="startsFill" style="width:0%;background:#22c55e"></div>
+    </div>
+  </div>
+
+  <div class="alert">⏰ FAAB waivers close at 5am daily — add tonight for tomorrow's starts</div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('tonight')">Tonight</button>
+    <button class="tab" onclick="switchTab('roster')">Roster</button>
+    <button class="tab" onclick="switchTab('health')">Health</button>
+    <button class="tab" onclick="switchTab('trade')">Trade</button>
+    <button class="tab" onclick="switchTab('chat')">Ask AI</button>
+  </div>
+
+  <div class="section active" id="tonight">
+    <button class="btn btn-primary" id="tonightBtn" onclick="runTonight()">🔍 Find tonight's waiver adds</button>
+    <div id="tonightResult"></div>
+  </div>
+
+  <div class="section" id="roster">
+    <div id="rosterContent">
+      <div class="empty-state">Tap "Sync ESPN" to load your live roster</div>
+    </div>
+  </div>
+
+  <div class="section" id="health">
+    <button class="btn btn-primary" id="healthBtn" onclick="runHealth()">📋 Run roster health check</button>
+    <div id="healthResult"></div>
+  </div>
+
+  <div class="section" id="trade">
+    <div id="tradePlayerSelects">
+      <div class="empty-state">Sync ESPN first to load your players</div>
+    </div>
+    <div id="tradeResult"></div>
+  </div>
+
+  <div class="section" id="chat">
+    <div class="quick-btns">
+      <button class="quick-btn" onclick="quickAsk('What moves should I make tonight? Search for the best available streamers for tomorrow with good matchups and Vegas lines.')">Tonight's moves</button>
+      <button class="quick-btn" onclick="quickAsk('Search for breaking news today — closer job changes, rotation changes, injuries affecting my roster or waiver targets.')">Breaking news</button>
+      <button class="quick-btn" onclick="quickAsk('Audit my pitching staff. Which pitchers are on bad teams with low win probability and should be dropped or traded?')">Pitcher audit</button>
+      <button class="quick-btn" onclick="quickAsk('What are the best available hitters on waivers scored for my league: BB +1, K -1, SB +1, TB +1, R +1, RBI +1.')">Waiver bats</button>
+      <button class="quick-btn" onclick="quickAsk('Who are the best available closers on waivers? Check role security and team win rates.')">Closer targets</button>
+      <button class="quick-btn" onclick="quickAsk('Check if any of my IL players are nearing return and what the roster decision is for each.')">IL returns</button>
+    </div>
+    <div class="chat-messages" id="chatMessages">
+      <div class="msg">
+        <div class="msg-label">⚾ AI MANAGER</div>
+        <div class="bubble-ai">Ready. Sync ESPN first to load your live roster, then ask me anything. I search live data on every question — RotoBaller, Vegas lines, Statcast, injury news.</div>
+      </div>
+    </div>
+    <div class="chat-input-row">
+      <textarea class="chat-input" id="chatInput" placeholder="Ask anything or paste data from ESPN, RotoBaller..." onkeydown="handleKey(event)" rows="2"></textarea>
+      <button class="chat-send" id="sendBtn" onclick="sendChat()">↑</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let chatHistory = [];
+let startsUsed = 0;
+let currentRoster = null;
+
+const SYSTEM = `You are the AI manager for Exciting Scully, a fantasy baseball team in a 10-team ESPN H2H points league (League ID: 1956519290, Team ID: 9).
+
+LEAGUE SCORING:
+HITTERS: TB +1, BB +1, R +1, RBI +1, SB +1, HBP +1, K -1
+PITCHERS: IP +3, K +1, W +5, SV +5, HLD +2, ER -2, H -1, BB -1, HBP -1, L -5
+
+CRITICAL RULES:
+- Weekly pitcher start limit: 12. Always check starts used before recommending adds.
+- Loss (-5) = never stream in a bad matchup.
+- IP (+3) = a 7-inning start is worth 21 points. Deep starters are king.
+- Hitter K (-1) = high-K hitters are self-penalizing.
+- BB = walks score +1 hitters, cost -1 pitchers.
+- Saves = Wins in value (+5).
+- Daily FAAB waivers at 5am. Must add night before.
+- FAAB default = $0 for streamers. Real budget only for closer job changes or breakout bats.
+- Carry ~2 closers, adjust based on saves opportunity.
+- Every player competes vs best waiver replacement weekly. No one is untouchable.
+- Always TRADE before DROP if player has value.
+- Waiver wire is deep in hitters. Rostered bats worth less than generic trade charts.
+- Replacement value rule: in any 2-for-1 trade, free waiver pickup fills the gap.
+
+PITCHER STREAMING (priority order):
+1. RotoBaller start/sit rating
+2. Opponent wOBA
+3. Vegas moneyline — team must be favored
+4. Statcast xERA + CSW% + Hard Hit%
+5. Park factor — avoid Coors, GABP, Fenway
+6. Weather
+7. Confirmed rotation, no injury flags
+8. Umpire tendency
+
+HITTER EVALUATION:
+1. xwOBA 2. BB% 3. K% 4. Sprint Speed + SB% 5. Batting order position 6. Opposing pitcher
+
+RESPONSE FORMAT: Exact move + FAAB amount + 2-3 sentences reasoning + verdict: ADD/DROP/KEEP/TRADE/START/SIT
+
+Always use web search for current data. Never rely on memory alone.`;
+
+async function callClaude(prompt, addToHistory = true) {
+  const messages = addToHistory
+    ? [...chatHistory, { role: 'user', content: prompt }]
+    : [{ role: 'user', content: prompt }];
+
+  const res = await fetch('/api/claude', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ system: SYSTEM, messages })
+  });
+
+  if (!res.ok) throw new Error('API call failed');
+  const data = await res.json();
+  const text = data.text || 'No response received.';
+
+  if (addToHistory) {
+    chatHistory.push({ role: 'user', content: prompt });
+    chatHistory.push({ role: 'assistant', content: text });
+  }
+  return text;
+}
+
+async function syncESPN() {
+  const btn = document.getElementById('syncBtn');
+  btn.textContent = '⟳ Syncing...';
+  try {
+    const res = await fetch('/api/espn');
+    if (!res.ok) throw new Error('ESPN sync failed');
+    const data = await res.json();
+
+    if (data.roster) {
+      currentRoster = data.roster;
+      renderRoster(data.roster);
+      buildTradeSelects(data.roster);
+    }
+    if (data.record) document.getElementById('mRecord').textContent = data.record;
+    if (data.faab) document.getElementById('mFAAB').textContent = '$' + data.faab;
+
+    const ilCount = (data.roster?.pitchers || []).filter(p => p.status === 'il').length +
+                    (data.roster?.batters || []).filter(p => p.status === 'il').length;
+    document.getElementById('mIL').textContent = ilCount;
+
+    btn.textContent = '✓ Synced';
+    setTimeout(() => btn.textContent = '⟳ Sync ESPN', 2000);
+  } catch(e) {
+    btn.textContent = '✗ Sync failed';
+    setTimeout(() => btn.textContent = '⟳ Sync ESPN', 2000);
+    document.getElementById('rosterContent').innerHTML = '<div class="empty-state">ESPN sync failed. Check your connection and try again.</div>';
+  }
+}
+
+function renderRoster(roster) {
+  const el = document.getElementById('rosterContent');
+  let html = '<div class="roster-section-label">Batters</div>';
+  (roster.batters || []).forEach(p => { html += playerRow(p); });
+  html += '<div class="roster-section-label">Pitchers</div>';
+  (roster.pitchers || []).forEach(p => { html += playerRow(p); });
+  el.innerHTML = html;
+}
+
+function playerRow(p) {
+  const dot = p.status === 'il' ? '#ef4444' : p.status === 'bench' ? '#64748b' : '#22c55e';
+  const badge = p.status === 'il'
+    ? '<span class="player-badge badge-il">IL</span>'
+    : p.status === 'bench'
+    ? '<span class="player-badge badge-be">BE</span>'
+    : '';
+  return `<div class="player-row">
+    <div class="player-dot" style="background:${dot}"></div>
+    <div style="flex:1">
+      <div class="player-name">${p.name}</div>
+      <div class="player-meta">${p.pos} · ${p.team}</div>
+    </div>
+    ${badge}
+  </div>`;
+}
+
+function buildTradeSelects(roster) {
+  const allPlayers = [...(roster.batters || []), ...(roster.pitchers || [])];
+  const options = allPlayers.map(p => `<option>${p.name} (${p.pos}/${p.team})</option>`).join('');
+  document.getElementById('tradePlayerSelects').innerHTML = `
+    <div class="trade-grid">
+      <div>
+        <div class="trade-label">Player 1 to send</div>
+        <select class="trade-select" id="trade1">${options}</select>
+      </div>
+      <div>
+        <div class="trade-label">Player 2 to send</div>
+        <select class="trade-select" id="trade2">${options}</select>
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="runTrade()">📊 Run replacement value math</button>
+  `;
+}
+
+function updateStarts(used, max) {
+  startsUsed = used;
+  const left = max - used;
+  document.getElementById('mStarts').textContent = left;
+  document.getElementById('mStarts').style.color = left <= 2 ? '#ef4444' : left <= 4 ? '#f59e0b' : '#22c55e';
+  document.getElementById('startsLabel').textContent = `${used} of ${max} starts used this week`;
+  const pct = Math.min((used/max)*100,100);
+  document.getElementById('startsFill').style.width = pct + '%';
+  document.getElementById('startsFill').style.background = pct >= 90 ? '#ef4444' : pct >= 70 ? '#f59e0b' : '#22c55e';
+}
+
+async function runTonight() {
+  const btn = document.getElementById('tonightBtn');
+  const result = document.getElementById('tonightResult');
+  btn.disabled = true;
+  btn.textContent = '⟳ Searching...';
+  result.innerHTML = '<div class="loading"><div class="spinner"></div> Checking RotoBaller, Vegas lines, Statcast...</div>';
+  const left = 12 - startsUsed;
+  const rosterContext = currentRoster
+    ? `My current roster: Batters: ${currentRoster.batters.map(p=>p.name).join(', ')}. Pitchers: ${currentRoster.pitchers.map(p=>p.name+' ('+p.status+')').join(', ')}.`
+    : 'Roster not yet synced from ESPN.';
+
+  try {
+    const today = new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+    const response = await callClaude(`Today is ${today}. FAAB waivers process at 5am tomorrow. I have ${left} pitcher start(s) remaining this week.
+
+${rosterContext}
+
+Run the nightly waiver engine:
+1. Search RotoBaller for top streamers this week
+2. Check Vegas lines for tomorrow — which pitchers have teams favored?
+3. Check Statcast xERA and recent form
+4. Check park factors and weather
+5. Scan for breaking news — closer changes, rotation news, injuries
+
+Give me: TOP ADD(S) for my ${left} remaining start(s) — exact name, $0 FAAB, full reasoning. WHO TO DROP to make room. Any urgent news. Be specific.`, false);
+
+    result.innerHTML = `<div class="card"><div class="card-label">⚾ TONIGHT — ${new Date().toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})}</div><div class="response">${response}</div></div>`;
+  } catch(e) {
+    result.innerHTML = `<div class="card"><div class="response">Search failed. Try again or use Ask AI tab.</div></div>`;
+  }
+  btn.disabled = false;
+  btn.textContent = '🔍 Refresh tonight\'s adds';
+}
+
+async function runHealth() {
+  const btn = document.getElementById('healthBtn');
+  const result = document.getElementById('healthResult');
+  btn.disabled = true;
+  btn.textContent = '⟳ Analyzing...';
+  result.innerHTML = '<div class="loading"><div class="spinner"></div> Comparing every player vs waiver replacements...</div>';
+  const rosterContext = currentRoster
+    ? `My current roster: Batters: ${currentRoster.batters.map(p=>p.name+' ('+p.pos+'/'+p.team+')').join(', ')}. Pitchers: ${currentRoster.pitchers.map(p=>p.name+' ('+p.pos+'/'+p.team+'/'+p.status+')').join(', ')}.`
+    : 'Roster not yet synced — use your known roster.';
+
+  try {
+    const today = new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+    const response = await callClaude(`Run full roster health check today (${today}).
+
+${rosterContext}
+
+Search current 2026 stats for each player. Give KEEP/TRADE/DROP verdict for every player.
+
+For pitchers check: rotation security, team win probability, ERA vs xERA, recent form.
+For batters check: batting order position, K rate trend, SB pace, role security.
+For IL players: return timeline and what to do when they come back.
+
+Flag anything urgent at the top. 2 sentences reasoning per player.`, false);
+
+    result.innerHTML = `<div class="card"><div class="card-label">📋 HEALTH — ${new Date().toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})}</div><div class="response">${response}</div></div>`;
+  } catch(e) {
+    result.innerHTML = `<div class="card"><div class="response">Health check failed. Try again.</div></div>`;
+  }
+  btn.disabled = false;
+  btn.textContent = '📋 Refresh health check';
+}
+
+async function runTrade() {
+  const p1 = document.getElementById('trade1')?.value;
+  const p2 = document.getElementById('trade2')?.value;
+  const result = document.getElementById('tradeResult');
+  if (!p1 || !p2) { result.innerHTML = '<div class="card"><div class="response">Sync ESPN first to load players.</div></div>'; return; }
+  if (p1 === p2) { result.innerHTML = '<div class="card"><div class="response">Select two different players.</div></div>'; return; }
+  result.innerHTML = '<div class="loading"><div class="spinner"></div> Running replacement value math...</div>';
+
+  try {
+    const response = await callClaude(`Full replacement value trade analysis: packaging ${p1} + ${p2} in a 2-for-1 deal.
+
+Search current 2026 stats for both players.
+
+1. Weekly fantasy points for ${p1} in my scoring
+2. Weekly fantasy points for ${p2} in my scoring
+3. Best realistic single player I could get back
+4. Best available $0 waiver replacement for position(s) lost
+5. Net math: (player received + waiver replacement) vs (${p1} + ${p2})
+6. Verdict: MAKE IT or PASS with point differential
+7. How to frame the offer
+
+Remember: waiver wire is deep in hitters so rostered bats worth less than generic charts.`, false);
+
+    result.innerHTML = `<div class="card"><div class="card-label">📊 TRADE: ${p1} + ${p2}</div><div class="response">${response}</div></div>`;
+  } catch(e) {
+    result.innerHTML = `<div class="card"><div class="response">Analysis failed. Try again.</div></div>`;
+  }
+}
+
+function appendMsg(role, content) {
+  const el = document.getElementById('chatMessages');
+  const div = document.createElement('div');
+  div.className = 'msg';
+  div.innerHTML = role === 'ai'
+    ? `<div class="msg-label">⚾ AI MANAGER</div><div class="bubble-ai">${content.replace(/\n/g,'<br>')}</div>`
+    : `<div class="bubble-user">${content}</div>`;
+  el.appendChild(div);
+  el.scrollTop = el.scrollHeight;
+}
+
+async function sendChat() {
+  const input = document.getElementById('chatInput');
+  const btn = document.getElementById('sendBtn');
+  const text = input.value.trim();
+  if (!text || btn.disabled) return;
+  input.value = '';
+  btn.disabled = true;
+  appendMsg('user', text);
+  const loadDiv = document.createElement('div');
+  loadDiv.className = 'msg';
+  loadDiv.innerHTML = '<div class="msg-label">⚾ AI MANAGER</div><div class="bubble-ai"><div class="loading"><div class="spinner"></div> Searching live data...</div></div>';
+  document.getElementById('chatMessages').appendChild(loadDiv);
+  try {
+    const response = await callClaude(text);
+    loadDiv.querySelector('.bubble-ai').innerHTML = response.replace(/\n/g,'<br>');
+  } catch(e) {
+    loadDiv.querySelector('.bubble-ai').innerHTML = 'Error. Try again.';
+  }
+  btn.disabled = false;
+}
+
+function quickAsk(text) {
+  document.getElementById('chatInput').value = text;
+  switchTab('chat');
+  sendChat();
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); }
+}
+
+function switchTab(name) {
+  ['tonight','roster','health','trade','chat'].forEach((n,i) => {
+    document.querySelectorAll('.tab')[i].classList.toggle('active', n === name);
+  });
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById(name).classList.add('active');
+}
+</script>
+</body>
+</html>
