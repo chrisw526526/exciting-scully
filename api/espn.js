@@ -6,22 +6,20 @@ module.exports = async function handler(req, res) {
 
   try {
     const response = await axios.get(
-      `https://fantasy.espn.com/apis/v3/games/flb/seasons/${SEASON}/segments/0/leagues/${LEAGUE_ID}?view=mTeam&view=mRoster&view=mMatchup`,
+      `https://fantasy.espn.com/apis/v3/games/flb/seasons/${SEASON}/segments/0/leagues/${LEAGUE_ID}?view=mTeam&view=mRoster`,
       {
         headers: {
           'Cookie': `espn_s2=${process.env.ESPN_S2}; SWID=${process.env.ESPN_SWID}`,
           'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-          'Accept': 'application/json',
+          'Accept': 'application/json, text/plain, */*',
           'Accept-Language': 'en-US,en;q=0.9',
-          'Referer': 'https://fantasy.espn.com/baseball/team',
-          'sec-ch-ua': '"Chromium";v="124", "Google Chrome";v="124"',
-          'sec-ch-ua-mobile': '?0',
-          'sec-ch-ua-platform': '"macOS"',
-          'Sec-Fetch-Dest': 'empty',
-          'Sec-Fetch-Mode': 'cors',
-          'Sec-Fetch-Site': 'same-origin'
+          'Referer': `https://fantasy.espn.com/baseball/team?leagueId=${LEAGUE_ID}&teamId=9&seasonId=${SEASON}`,
+          'x-fantasy-source': 'kona',
+          'x-fantasy-platform': 'kona-PROD-e5e4b7bc6948b4ac911fb2f2a786b29cd3f8e3b3',
+          'x-fantasy-filter': JSON.stringify({"players":{"filterStatus":{"value":["ONTEAM","INJURED","WAIVERS"]},"filterSlotIds":{"value":[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21]},"limit":50,"offset":0,"sortPercOwned":{"sortPriority":1,"sortAsc":false}}}),
+          'Origin': 'https://fantasy.espn.com'
         },
-        timeout: 10000
+        timeout: 15000
       }
     );
 
