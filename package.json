@@ -6,6 +6,6 @@
     "node": "24.x"
   },
   "dependencies": {
-    "espn-fantasy-football-api": "^2.0.0"
+    "axios": "^1.6.0"
   }
 }
