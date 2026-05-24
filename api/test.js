@@ -15,7 +15,11 @@ module.exports = async function handler(req, res) {
     });
 
     const data = await response.json();
-    const text = data.content?.[0]?.text || 'No response';
+    const text = (data.content || [])
+      .filter(b => b.type === 'text')
+      .map(b => b.text)
+      .join('') || 'No response';
+      
     return res.status(200).json({ success: true, response: text });
 
   } catch (error) {
