@@ -8,17 +8,22 @@ module.exports = async function handler(req, res) {
       SWID: process.env.ESPN_SWID
     });
 
-    const roster = await client.getTeamsAtWeek({ seasonId: 2026, matchupPeriodId: 1 });
+    const teams = await client.getTeamsAtWeek({ 
+      seasonId: 2026, 
+      matchupPeriodId: 8
+    });
     
     return res.status(200).json({ 
       success: true, 
-      data: roster 
+      teamCount: teams.length,
+      firstTeam: teams[0]
     });
 
   } catch (error) {
     return res.status(500).json({ 
       success: false, 
-      error: error.message 
+      error: error.message,
+      stack: error.stack
     });
   }
 }
