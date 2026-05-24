@@ -15,12 +15,12 @@ module.exports = async function handler(req, res) {
     });
 
     const data = await response.json();
-    const text = (data.content || [])
-      .filter(b => b.type === 'text')
-      .map(b => b.text)
-      .join('') || 'No response';
-      
-    return res.status(200).json({ success: true, response: text });
+    
+    // Return the full raw response so we can see exactly what ESPN is sending
+    return res.status(200).json({ 
+      status: response.status,
+      full_response: data
+    });
 
   } catch (error) {
     return res.status(500).json({ success: false, error: error.message });
