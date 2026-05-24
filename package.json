@@ -4,5 +4,8 @@
   "description": "AI Fantasy Baseball Manager for Exciting Scully",
   "engines": {
     "node": "24.x"
+  },
+  "dependencies": {
+    "espn-fantasy-football-api": "^2.0.0"
   }
 }
