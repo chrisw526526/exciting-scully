@@ -8,19 +8,19 @@ module.exports = async function handler(req, res) {
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-sonnet-4-6',
         max_tokens: 100,
         messages: [{ role: 'user', content: 'Say the word WORKING and nothing else.' }]
       })
     });
 
     const data = await response.json();
-    
-    // Return the full raw response so we can see exactly what ESPN is sending
-    return res.status(200).json({ 
-      status: response.status,
-      full_response: data
-    });
+    const text = (data.content || [])
+      .filter(b => b.type === 'text')
+      .map(b => b.text)
+      .join('') || 'No response';
+
+    return res.status(200).json({ success: true, response: text });
 
   } catch (error) {
     return res.status(500).json({ success: false, error: error.message });
